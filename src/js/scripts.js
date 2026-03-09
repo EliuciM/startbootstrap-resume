@@ -100,12 +100,89 @@ window.addEventListener('DOMContentLoaded', event => {
         previewFrame.addEventListener('load', syncRagPreviewScale);
     }
 
+    const zoomableImages = [].slice.call(
+        document.querySelectorAll('img.experience-img')
+    ).filter(function (img) {
+        return !img.closest('a');
+    });
+
+    let imageModal = null;
+    let imageModalBackdrop = null;
+    let imageModalContent = null;
+    let imageModalClose = null;
+
+    const ensureImageModal = function () {
+        if (imageModal) {
+            return;
+        }
+
+        imageModal = document.createElement('div');
+        imageModal.className = 'image-modal';
+        imageModal.setAttribute('aria-hidden', 'true');
+
+        imageModalBackdrop = document.createElement('div');
+        imageModalBackdrop.className = 'image-modal-backdrop';
+
+        const imageModalDialog = document.createElement('div');
+        imageModalDialog.className = 'image-modal-dialog';
+
+        imageModalClose = document.createElement('button');
+        imageModalClose.className = 'image-modal-close';
+        imageModalClose.type = 'button';
+        imageModalClose.textContent = 'Close';
+
+        imageModalContent = document.createElement('img');
+        imageModalContent.className = 'image-modal-content';
+        imageModalContent.alt = 'Preview';
+
+        imageModalDialog.appendChild(imageModalClose);
+        imageModalDialog.appendChild(imageModalContent);
+
+        imageModal.appendChild(imageModalBackdrop);
+        imageModal.appendChild(imageModalDialog);
+
+        document.body.appendChild(imageModal);
+
+        imageModalBackdrop.addEventListener('click', function () {
+            imageModal.classList.remove('show');
+            imageModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        });
+
+        imageModalClose.addEventListener('click', function () {
+            imageModal.classList.remove('show');
+            imageModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        });
+    };
+
+    const openImageModal = function (src, alt) {
+        ensureImageModal();
+        imageModalContent.src = src;
+        imageModalContent.alt = alt || 'Preview';
+        imageModal.classList.add('show');
+        imageModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    zoomableImages.forEach(function (img) {
+        img.classList.add('zoomable-image');
+        img.addEventListener('click', function () {
+            openImageModal(img.src, img.alt);
+        });
+    });
+
     window.addEventListener('resize', syncRagPreviewScale);
     window.addEventListener('load', syncRagPreviewScale);
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeRagModal();
+            if (imageModal) {
+                imageModal.classList.remove('show');
+                imageModal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
         }
     });
 
