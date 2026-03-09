@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent RAG Pipeline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:#080c14; color:#dde3ed;
+    font-family:'Noto Sans SC',sans-serif;
+    min-height:100vh; display:flex;
+    align-items:flex-start; justify-content:center;
+    padding:44px 24px 60px;
+  }
+
+  .outer { display:flex; gap:26px; width:1240px; align-items:flex-start; }
+  .col-pipeline { width:590px; flex-shrink:0; }
+  .col-trace    { flex:1; position:sticky; top:44px; }
+
+  /* Header */
+  .header {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-bottom:28px; padding-bottom:14px;
+    border-bottom:2px solid #1a2540;
+  }
+  .header h1 { font-size:16px; font-weight:700; color:#f0f4ff; letter-spacing:.04em; }
+  .header p  { font-size:10px; color:#3d5070; margin-top:4px; font-family:'JetBrains Mono',monospace; }
+  .header-badge {
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#4a6888;
+    border:1px solid #1e2e48; padding:4px 10px; border-radius:4px; background:#0c1422;
+  }
+
+  /* Node */
+  .node {
+    border-radius:8px; border:2px solid #1e2a40;
+    background:#0d1320; padding:14px 17px 13px;
+    position:relative; cursor:pointer;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .node:hover { border-color:#2e3e58; }
+
+  .node-slate  { border-color:#243044; background:#0b1018; }
+  .node-teal   { border-color:#145a62; background:#061418; }
+  .node-green  { border-color:#1a5434; background:#07160e; }
+  .node-amber  { border-color:#5a3a10; background:#160f04; }
+  .node-violet { border-color:#3a2268; background:#0e0a1d; }
+
+  .node-slate.active  { border-color:#4a5a74; box-shadow:0 0 14px #24304440; }
+  .node-teal.active   { border-color:#2ab4be; box-shadow:0 0 16px #145a6260; }
+  .node-green.active  { border-color:#2ad46a; box-shadow:0 0 16px #1a543460; }
+  .node-amber.active  { border-color:#9a6a28; box-shadow:0 0 16px #5a3a1060; }
+  .node-violet.active { border-color:#6a42b8; box-shadow:0 0 16px #3a226870; }
+
+  .agent-tag {
+    display:inline-block; font-family:'JetBrains Mono',monospace;
+    font-size:8.5px; font-weight:700; letter-spacing:.14em;
+    padding:2px 8px; border-radius:3px; margin-bottom:8px; text-transform:uppercase;
+  }
+  .at-teal   { background:#082830; color:#2dd4bf; border:1px solid #145a62; }
+  .at-green  { background:#082818; color:#4ade80; border:1px solid #1a5434; }
+  .at-amber  { background:#281a06; color:#fbbf24; border:1px solid #5a3a10; }
+  .at-violet { background:#180f38; color:#a78bfa; border:1px solid #3a2268; }
+  .at-slate  { background:#0e131c; color:#7a90b0; border:1px solid #243044; }
+
+  .node-title {
+    font-size:13px; font-weight:700; color:#eaf0ff;
+    margin-bottom:5px; display:flex; align-items:center; gap:8px;
+  }
+  .step-num { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#3a5070; }
+  .node-body { font-size:11.5px; color:#7a90b0; line-height:1.7; font-weight:400; }
+
+  .pills { margin-top:9px; display:flex; flex-wrap:wrap; gap:5px; }
+  .pill {
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+    padding:2px 8px; border-radius:3px; border:1px solid;
+  }
+  .pill-teal   { color:#2dd4bf; border-color:#145a6260; background:#06181c; }
+  .pill-green  { color:#4ade80; border-color:#1a543460; background:#06140a; }
+  .pill-amber  { color:#fbbf24; border-color:#5a3a1060; background:#140c02; }
+  .pill-violet { color:#a78bfa; border-color:#3a226860; background:#0c0818; }
+  .pill-gray   { color:#5a7090; border-color:#243044;   background:#0a1018; }
+
+  /* Arrows */
+  .arrow-wrap {
+    display:flex; align-items:center; justify-content:center;
+    height:32px; position:relative;
+  }
+  .arrow-wrap::before {
+    content:''; position:absolute; left:50%; transform:translateX(-50%);
+    width:2px; height:100%; background:linear-gradient(to bottom,#1e2a40,#2e3e58);
+  }
+  .al {
+    position:relative; z-index:1; background:#080c14; padding:0 10px;
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
+    color:#3a5070; letter-spacing:.12em; display:flex; align-items:center; gap:5px;
+  }
+
+  /* Loop box */
+  .branch-container {
+    border:2px dashed #1a3428; border-radius:10px;
+    padding:15px; background:#05100880; position:relative;
+  }
+  .branch-label {
+    position:absolute; top:-10px; left:14px;
+    background:#080c14; padding:0 8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px; font-weight:700; color:#1f7a3a; letter-spacing:.12em;
+  }
+  .loop-hint {
+    display:flex; align-items:flex-start; gap:8px;
+    margin-top:10px; padding:8px 12px; border-radius:5px;
+    background:#06140a; border:1px solid #1a3a20;
+    font-size:11px; color:#2a6842; line-height:1.55;
+  }
+  .loop-hint strong { color:#30904a; font-weight:600; }
+
+  /* Branch row */
+  .branch-row { display:flex; gap:10px; align-items:stretch; }
+  .branch-left,.branch-right { flex:1; }
+  .branch-divider {
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:0 3px; gap:5px;
+  }
+  .bd-line { width:2px; flex:1; background:linear-gradient(to bottom,transparent,#243044,transparent); }
+  .bd-or {
+    font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; color:#3a5070;
+    background:#080c14; padding:3px 5px; border:1px solid #1a2440; border-radius:3px;
+  }
+  .cond {
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
+    padding:3px 10px; border-radius:3px; margin-bottom:8px; display:inline-block;
+  }
+  .cond-yes { background:#062010; color:#30d068; border:1px solid #0d4a20; }
+  .cond-no  { background:#200a0a; color:#f06060; border:1px solid #4a1010; }
+
+  /* Query box */
+  .query-box {
+    background:#0b1220; border:2px solid #1e2e48;
+    border-radius:8px; padding:14px 20px; text-align:center;
+    cursor:pointer; transition:border-color .2s;
+  }
+  .query-box:hover { border-color:#2e3e58; }
+  .query-box.active { border-color:#3a5070; box-shadow:0 0 14px #1e2e4840; }
+  .qb-label { font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; color:#3a5070; letter-spacing:.1em; margin-bottom:6px; }
+  .qb-text  { font-size:12px; color:#5a7090; font-style:italic; }
+
+  .kg-legend { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .kg-entity {
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
+    padding:2px 9px; border-radius:3px; color:#2dd4bf;
+    border:1px solid #145a6270; background:#05181c;
+  }
+
+  .output-node {
+    border-radius:8px; border:2px solid #3a2268; background:#0e0a1d;
+    padding:15px 18px; display:flex; align-items:center; gap:14px;
+    cursor:pointer; transition:border-color .2s,box-shadow .2s;
+  }
+  .output-node:hover { border-color:#5a32a8; }
+  .output-node.active { border-color:#7a42d8; box-shadow:0 0 16px #3a226870; }
+  .on-icon { font-size:24px; }
+  .on-title { font-size:13px; font-weight:700; color:#c4b5fd; margin-bottom:4px; }
+  .on-desc  { font-size:11px; color:#5a4890; line-height:1.6; }
+
+  .footer {
+    margin-top:24px; padding-top:14px; border-top:2px solid #111820;
+    display:flex; flex-wrap:wrap; gap:14px;
+  }
+  .fi { display:flex; align-items:center; gap:6px; font-size:10.5px; color:#3a5070; font-weight:500; }
+  .fi-dot { width:8px; height:8px; border-radius:2px; }
+
+  /* Trace panel */
+  .trace-panel { background:#090d18; border:2px solid #1a2440; border-radius:10px; overflow:hidden; }
+  .trace-header {
+    padding:14px 18px 12px; border-bottom:2px solid #111820;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .trace-header h2 {
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+    color:#4a6888; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .trace-header .th-sub { font-family:'JetBrains Mono',monospace; font-size:9px; color:#1e2e48; margin-top:3px; }
+  .trace-hint {
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#243060;
+    padding:3px 9px; border:1px solid #1a2440; border-radius:3px;
+    animation:blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+  /* Tab switcher */
+  .tab-bar {
+    display:flex; gap:0; margin-bottom:14px;
+    border:2px solid #1a2e40; border-radius:6px; overflow:hidden;
+  }
+  .tab-btn {
+    flex:1; padding:7px 10px; font-family:'JetBrains Mono',monospace;
+    font-size:9.5px; font-weight:700; letter-spacing:.08em;
+    cursor:pointer; background:#0a1420; color:#3a5878;
+    border:none; text-align:center; transition:background .15s,color .15s;
+    border-right:1px solid #1a2e40;
+  }
+  .tab-btn:last-child { border-right:none; }
+  .tab-btn:hover { background:#0e1c30; color:#5a88a8; }
+  .tab-btn.active { background:#0d2838; color:#2dd4bf; }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:flex; flex-direction:column; gap:0; }
+
+  .trace-steps { padding:16px 18px; display:flex; flex-direction:column; gap:0; }
+  .trace-step { display:none; animation:fadeIn .3s ease; }
+  .trace-step.visible { display:flex; flex-direction:column; gap:0; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+  .ts-row { display:flex; gap:0; }
+  .ts-spine { width:32px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; }
+  .ts-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; margin-top:2px; border:2px solid; }
+  .ts-line { width:2px; flex:1; min-height:12px; margin:3px 0; }
+
+  .dot-slate  { border-color:#4a5a74; background:#1e2c40; }
+  .dot-teal   { border-color:#2dd4bf; background:#082c30; }
+  .dot-green  { border-color:#4ade80; background:#082c18; }
+  .dot-amber  { border-color:#fbbf24; background:#2c1e06; }
+  .dot-violet { border-color:#a78bfa; background:#1c1038; }
+  .dot-query  { border-color:#5b9eff; background:#10203e; }
+
+  .line-slate  { background:linear-gradient(to bottom,#4a5a7440,#1e2c4020); }
+  .line-teal   { background:linear-gradient(to bottom,#2dd4bf40,#082c3020); }
+  .line-green  { background:linear-gradient(to bottom,#4ade8040,#082c1820); }
+  .line-amber  { background:linear-gradient(to bottom,#fbbf2440,#2c1e0620); }
+  .line-violet { background:linear-gradient(to bottom,#a78bfa40,#1c103820); }
+
+  .ts-content { flex:1; padding-bottom:16px; }
+  .ts-agent {
+    font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700;
+    letter-spacing:.12em; text-transform:uppercase; margin-bottom:5px;
+  }
+  .ts-agent.c-slate  { color:#7a90b0; }
+  .ts-agent.c-teal   { color:#2dd4bf; }
+  .ts-agent.c-green  { color:#4ade80; }
+  .ts-agent.c-amber  { color:#fbbf24; }
+  .ts-agent.c-violet { color:#a78bfa; }
+  .ts-agent.c-query  { color:#5b9eff; }
+
+  .ts-card { background:#0c1424; border:1px solid #1e2e48; border-radius:6px; padding:11px 14px; }
+  .ts-label { font-size:12px; font-weight:700; color:#d0daf0; margin-bottom:6px; }
+  .ts-detail { font-size:11px; color:#4a6280; line-height:1.65; }
+  .ts-detail strong { color:#8aaccf; font-weight:600; }
+
+  .ts-code {
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600; color:#3aac80;
+    background:#060e0c; border:1px solid #0e2418; border-radius:4px;
+    padding:8px 11px; margin-top:8px; line-height:1.7; white-space:pre;
+  }
+  .ts-result { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .ts-tag {
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+    padding:2px 9px; border-radius:3px; border:1px solid;
+  }
+  .tst-teal   { color:#2dd4bf; border-color:#145a6250; background:#05181c; }
+  .tst-green  { color:#4ade80; border-color:#1a543450; background:#06140a; }
+  .tst-amber  { color:#fbbf24; border-color:#5a3a1050; background:#140c02; }
+  .tst-violet { color:#a78bfa; border-color:#3a226850; background:#0c0818; }
+  .tst-blue   { color:#5b9eff; border-color:#1d3a6b50; background:#091321; }
+  .tst-gray   { color:#5a7090; border-color:#243044;   background:#0a1018; }
+
+  .ts-decision {
+    margin-top:8px; padding:7px 11px; border-radius:5px;
+    font-size:11px; line-height:1.6; border-left:3px solid;
+  }
+  .tsd-teal   { background:#05181c; border-color:#2dd4bf; color:#2a9080; }
+  .tsd-green  { background:#06140a; border-color:#4ade80; color:#2a8040; }
+  .tsd-amber  { background:#140c02; border-color:#fbbf24; color:#907030; }
+  .tsd-violet { background:#0c0818; border-color:#a78bfa; color:#7060b0; }
+
+  .trace-empty { padding:40px 20px; text-align:center; color:#1e2a3d; }
+  .trace-empty .te-icon { font-size:32px; margin-bottom:12px; opacity:.3; }
+  .trace-empty p { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; line-height:1.9; }
+
+  .trace-progress { height:3px; background:#0e1520; }
+  .trace-progress-bar { height:100%; background:linear-gradient(to right,#145a62,#2dd4bf); transition:width .4s ease; width:0%; }
+
+  /* Path badge */
+  .path-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
+    padding:2px 9px; border-radius:3px; margin-right:6px;
+  }
+  .pb-a { background:#062018; color:#20c070; border:1px solid #0e4028; }
+  .pb-b { background:#061830; color:#3080e0; border:1px solid #0e2850; }
+
+  /* Parallel blocks */
+  .parallel-wrap { display:flex; gap:8px; margin-top:10px; }
+  .parallel-block { flex:1; border-radius:5px; padding:9px 11px; border:1px solid; }
+  .pb-green-block { border-color:#1a543460; background:#07160e; }
+  .pb-amber-block { border-color:#5a3a1060; background:#140c02; }
+  .pb-block-label {
+    font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700;
+    letter-spacing:.1em; margin-bottom:6px; text-transform:uppercase;
+  }
+  .pbl-green { color:#4ade80; }
+  .pbl-amber { color:#fbbf24; }
+  .pb-block-body { font-size:10.5px; color:#4a6280; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="outer">
+
+  <!-- LEFT: Pipeline -->
+  <div class="col-pipeline">
+
+    <div class="header">
+      <div>
+        <h1>Multi-Agent RAG Pipeline</h1>
+        <p>Guardrail → Graph Retrieval (Loop) → Vector Retrieval → Response</p>
+      </div>
+      <div class="header-badge">LangGraph · Neo4j · MCP</div>
+    </div>
+
+    <div class="query-box" id="node-query" onclick="showTrace('query')">
+      <div class="qb-label">USER QUERY · 点击任意节点查看推理过程</div>
+      <div class="qb-text">"2023年东南亚台风季期间，泰国和越南的受灾情况及负责应急的部门联系方式"</div>
+    </div>
+
+    <div class="arrow-wrap"><span class="al">↓ ENTRY</span></div>
+
+    <div class="node node-slate" id="node-guardrail" onclick="showTrace('guardrail')">
+      <div class="agent-tag at-slate">Agent 01 · Guardrail</div>
+      <div class="node-title"><span class="step-num">①</span>相关性判断 &amp; 查询路由</div>
+      <div class="node-body">判断问题是否与知识库内容相关。<strong style="color:#8aaccf">不相关则直接回复</strong>，避免无效检索链路开销。</div>
+      <div class="pills">
+        <span class="pill pill-gray">Intent Classification</span>
+        <span class="pill pill-gray">Relevance Check</span>
+      </div>
+    </div>
+
+    <div class="arrow-wrap" style="height:26px;">
+      <span class="al" style="gap:18px;">
+        <span style="color:#f0606060;font-size:8.5px;">✕ 不相关 → 直接回复</span>
+        <span style="color:#ffffff10">|</span>
+        <span style="color:#30d06860;font-size:8.5px;">✓ 相关 → 进入检索</span>
+      </span>
+    </div>
+
+    <div class="branch-container">
+      <span class="branch-label">DYNAMIC GRAPH TRAVERSAL LOOP</span>
+      <div class="node node-teal" id="node-graph" onclick="showTrace('graph')">
+        <div class="agent-tag at-teal">Agent 02 · Graph Retrieval</div>
+        <div class="node-title"><span class="step-num">②</span>自然语言 → Cypher 查询生成 &amp; 执行</div>
+        <div class="kg-legend">
+          <span class="kg-entity">国家</span>
+          <span class="kg-entity">灾害</span>
+          <span class="kg-entity">分析报告</span>
+          <span class="kg-entity">应急部门</span>
+        </div>
+        <div class="node-body">LLM 生成 Cypher，通过封装为 <strong style="color:#2dd4bf">MCP Tool</strong> 的执行器在 Neo4j 上运行。<strong style="color:#c0e4e0">每次仅执行单步查询</strong>，LLM 根据返回节点动态决策下一跳方向。</div>
+        <div class="pills">
+          <span class="pill pill-teal">Text2Cypher</span>
+          <span class="pill pill-teal">MCP Tool Call</span>
+          <span class="pill pill-teal">Neo4j</span>
+          <span class="pill pill-gray">Single-step per call</span>
+        </div>
+      </div>
+      <div class="loop-hint">
+        <span style="font-size:14px;flex-shrink:0;">↺</span>
+        <span>LLM 根据返回节点<strong> 动态决定是否继续跳转</strong>，直至信息完整或达到跳数上限</span>
+      </div>
+    </div>
+
+    <div class="arrow-wrap"><span class="al">↓ GRAPH RESULT</span></div>
+
+    <div style="text-align:center;margin-bottom:10px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:#3a5070;letter-spacing:.1em;">检索结果中是否包含「分析报告」实体？</span>
+    </div>
+
+    <div class="branch-row">
+      <div class="branch-left">
+        <div style="text-align:center;"><span class="cond cond-yes">✓ 包含分析报告</span></div>
+        <div class="node node-green" id="node-vector" onclick="showTrace('vector')">
+          <div class="agent-tag at-green">Agent 03 · Vector Retrieval</div>
+          <div class="node-title"><span class="step-num">③</span>文档切片向量检索 &amp; 摘要压缩</div>
+          <div class="node-body">在图谱命中的报告范围内召回语义相似片段，<strong style="color:#4ade80">就地摘要压缩</strong>，避免上下文窗口爆炸。</div>
+          <div class="pills">
+            <span class="pill pill-green">Scoped Vector Search</span>
+            <span class="pill pill-green">Chunk Summarization</span>
+            <span class="pill pill-gray">Context Compression</span>
+          </div>
+        </div>
+      </div>
+      <div class="branch-divider">
+        <div class="bd-line"></div><div class="bd-or">OR</div><div class="bd-line"></div>
+      </div>
+      <div class="branch-right">
+        <div style="text-align:center;"><span class="cond cond-no">✕ 仅结构化节点</span></div>
+        <div class="node node-amber" id="node-direct" onclick="showTrace('direct')">
+          <div class="agent-tag at-amber">直接传递</div>
+          <div class="node-title"><span class="step-num">③'</span>图谱结构化结果直传</div>
+          <div class="node-body">部门联系信息等<strong style="color:#fbbf24">结构化数据</strong>无需向量检索，直接组装传入回复 Agent。</div>
+          <div class="pills">
+            <span class="pill pill-amber">Structured Data</span>
+            <span class="pill pill-amber">No RAG needed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-wrap"><span class="al">↓ ASSEMBLED CONTEXT</span></div>
+
+    <div class="output-node" id="node-response" onclick="showTrace('response')">
+      <div class="on-icon">◈</div>
+      <div style="flex:1">
+        <div class="agent-tag at-violet" style="margin-bottom:5px;">Agent 04 · Response</div>
+        <div class="on-title">最终回复生成</div>
+        <div class="on-desc">基于原始问题与组装上下文生成最终答复，支持多实体、跨文档信息整合。</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="fi"><div class="fi-dot" style="background:#3a5070"></div>Guardrail</div>
+      <div class="fi"><div class="fi-dot" style="background:#145a62"></div>Graph Retrieval</div>
+      <div class="fi"><div class="fi-dot" style="background:#1a5434"></div>Vector Retrieval</div>
+      <div class="fi"><div class="fi-dot" style="background:#5a3a10"></div>Direct Pass</div>
+      <div class="fi"><div class="fi-dot" style="background:#3a2268"></div>Response</div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Trace Panel -->
+  <div class="col-trace">
+    <div class="trace-panel">
+
+      <div class="trace-header">
+        <div>
+          <h2>Example Trace</h2>
+          <div class="th-sub">点击左侧任意节点查看该步骤的推理过程</div>
+        </div>
+        <div class="trace-hint">← CLICK NODE</div>
+      </div>
+
+      <div class="trace-progress"><div class="trace-progress-bar" id="progress-bar"></div></div>
+
+      <div class="trace-steps">
+
+        <!-- Empty -->
+        <div class="trace-step visible" id="trace-empty">
+          <div class="trace-empty">
+            <div class="te-icon">◎</div>
+            <p>点击左侧节点<br>查看该步骤在示例查询中的<br>具体推理与执行过程</p>
+          </div>
+        </div>
+
+        <!-- Query -->
+        <div class="trace-step" id="trace-query">
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-query"></div><div class="ts-line line-teal"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-query">USER INPUT</div>
+              <div class="ts-card">
+                <div class="ts-label">原始查询</div>
+                <div class="ts-detail">"2023年东南亚台风季期间，泰国和越南的受灾情况及负责应急的部门联系方式"</div>
+                <div class="ts-result">
+                  <span class="ts-tag tst-blue">地域：东南亚 / 泰国 / 越南</span>
+                  <span class="ts-tag tst-blue">时间属性：2023年</span>
+                  <span class="ts-tag tst-blue">灾害类型：台风</span>
+                  <span class="ts-tag tst-blue">需求①：受灾情况（分析报告）</span>
+                  <span class="ts-tag tst-blue">需求②：应急部门联系方式</span>
+                </div>
+                <div class="ts-decision tsd-teal" style="margin-top:9px;">
+                  此查询同时涉及「分析报告」和「部门信息」两类实体，需要多跳图遍历 + 向量检索双路并行处理
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guardrail -->
+        <div class="trace-step" id="trace-guardrail">
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-slate"></div><div class="ts-line line-teal"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-slate">Agent 01 · Guardrail</div>
+              <div class="ts-card">
+                <div class="ts-label">相关性判断</div>
+                <div class="ts-detail">检测到关键词：<strong>台风、东南亚、受灾、应急部门</strong><br>命中知识库覆盖范围：自然灾害分析 + 区域应急信息</div>
+                <div class="ts-result">
+                  <span class="ts-tag tst-green">✓ 相关度：HIGH</span>
+                  <span class="ts-tag tst-green">✓ 路由至图谱检索</span>
+                </div>
+                <div class="ts-decision tsd-teal">
+                  判定通过，进入 Graph Retrieval Agent。若问题为"如何预测台风路径"等超出范围的问题，则在此直接回复。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graph — tab switcher -->
+        <div class="trace-step" id="trace-graph">
+
+          <div style="padding:0 0 2px 32px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:#3a5878;letter-spacing:.1em;margin-bottom:8px;">LLM 动态选择遍历路径 · 两种策略示例</div>
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('path-a',this)">PATH A · 国家优先</button>
+              <button class="tab-btn" onclick="switchTab('path-b',this)">PATH B · 灾害优先</button>
+            </div>
+          </div>
+
+          <!-- PATH A -->
+          <div class="tab-pane active" id="path-a">
+
+            <div class="ts-row">
+              <div class="ts-spine"><div class="ts-dot dot-teal"></div><div class="ts-line line-teal"></div></div>
+              <div class="ts-content">
+                <div class="ts-agent c-teal"><span class="path-badge pb-a">PATH A</span>Hop 1 · 定位国家节点</div>
+                <div class="ts-card">
+                  <div class="ts-label">查询中已有明确国家名称 → 直接匹配 Country 节点</div>
+                  <div class="ts-detail">LLM 识别到「泰国 / 越南」为明确实体，<strong>无需经由灾害节点中转</strong>，直接锁定最短路径。</div>
+                  <div class="ts-code">MATCH (c:Country)
+WHERE c.name IN ["泰国", "越南"]
+RETURN c.id, c.name, c.region</div>
+                  <div class="ts-result">
+                    <span class="ts-tag tst-teal">Country(泰国) · id:TH</span>
+                    <span class="ts-tag tst-teal">Country(越南) · id:VN</span>
+                  </div>
+                  <div class="ts-decision tsd-teal">
+                    <strong>LLM 决策：</strong>国家节点已定位，用户有两个子需求 → 并行发起 Hop 2a（报告）和 Hop 2b（部门）
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ts-row">
+              <div class="ts-spine"><div class="ts-dot dot-teal"></div><div class="ts-line line-green"></div></div>
+              <div class="ts-content">
+                <div class="ts-agent c-teal"><span class="path-badge pb-a">PATH A</span>Hop 2 · 并行跳转（2跳终止）</div>
+                <div class="ts-card">
+                  <div class="ts-label">Country → AnalysisReport &amp; Department（并行）</div>
+                  <div class="parallel-wrap">
+                    <div class="parallel-block pb-green-block">
+                      <div class="pb-block-label pbl-green">Hop 2a · -[:HAS_REPORT]→</div>
+                      <div class="ts-code" style="margin-top:0;font-size:9px;">MATCH (c:Country)
+  -[:HAS_REPORT]->(r:AnalysisReport)
+WHERE c.id IN ["TH","VN"]
+  AND r.disaster_type = "台风"
+  AND r.year = 2023
+RETURN r.id, r.title, r.date</div>
+                      <div class="ts-result" style="margin-top:6px;">
+                        <span class="ts-tag tst-green">TH-Typhoon-2023-08</span>
+                        <span class="ts-tag tst-green">TH-Typhoon-2023-10</span>
+                        <span class="ts-tag tst-green">VN-Typhoon-2023-09</span>
+                      </div>
+                    </div>
+                    <div class="parallel-block pb-amber-block">
+                      <div class="pb-block-label pbl-amber">Hop 2b · -[:HAS_DEPT]→</div>
+                      <div class="ts-code" style="margin-top:0;font-size:9px;">MATCH (c:Country)
+  -[:HAS_DEPT]->(d:Department)
+WHERE c.id IN ["TH","VN"]
+  AND d.type = "应急救援"
+RETURN d.name, d.contact,
+       d.address, d.scope</div>
+                      <div class="ts-result" style="margin-top:6px;">
+                        <span class="ts-tag tst-amber">DDPM · +66-2-637-3000</span>
+                        <span class="ts-tag tst-amber">VNDMA · +84-24-3733-3415</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ts-decision tsd-green" style="margin-top:10px;">
+                    <strong>触发条件：</strong>Hop 2a 含 AnalysisReport → 激活 Vector Retrieval；Hop 2b 含结构化节点 → 直传 Response Agent。共 2 跳完成。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /path-a -->
+
+          <!-- PATH B -->
+          <div class="tab-pane" id="path-b">
+
+            <div class="ts-row">
+              <div class="ts-spine"><div class="ts-dot dot-teal"></div><div class="ts-line line-teal"></div></div>
+              <div class="ts-content">
+                <div class="ts-agent c-teal"><span class="path-badge pb-b">PATH B</span>Hop 1 · 先定位灾害节点，按时间属性过滤</div>
+                <div class="ts-card">
+                  <div class="ts-label">查询重心在「台风事件本身」→ 从 Disaster 节点出发</div>
+                  <div class="ts-detail">若查询描述的是"某次灾害"而非明确国家，LLM 判断从 Disaster 节点出发可<strong>同时完成事件过滤</strong>，再向下扩散至受影响国家，结果更精确。</div>
+                  <div class="ts-code">MATCH (dis:Disaster)
+WHERE dis.type = "台风"
+  AND dis.year = 2023
+  AND dis.region = "东南亚"
+RETURN dis.id, dis.name, dis.date, dis.severity</div>
+                  <div class="ts-result">
+                    <span class="ts-tag tst-teal">Typhoon-Doksuri-2023</span>
+                    <span class="ts-tag tst-teal">Typhoon-Saola-2023</span>
+                    <span class="ts-tag tst-teal">Typhoon-Haikui-2023</span>
+                  </div>
+                  <div class="ts-decision tsd-teal">
+                    <strong>LLM 决策：</strong>已定位东南亚2023台风事件，沿 [:AFFECTED] 关系跳转至关联国家节点，同时携带来源灾害 ID
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ts-row">
+              <div class="ts-spine"><div class="ts-dot dot-teal"></div><div class="ts-line line-teal"></div></div>
+              <div class="ts-content">
+                <div class="ts-agent c-teal"><span class="path-badge pb-b">PATH B</span>Hop 2 · Disaster -[:AFFECTED]→ Country（按名称过滤）</div>
+                <div class="ts-card">
+                  <div class="ts-label">沿 AFFECTED 关系扩散，过滤至目标国家</div>
+                  <div class="ts-code">MATCH (dis:Disaster)-[:AFFECTED]->(c:Country)
+WHERE dis.id IN ["Typhoon-Doksuri-2023",
+                 "Typhoon-Saola-2023",
+                 "Typhoon-Haikui-2023"]
+  AND c.name IN ["泰国", "越南"]
+RETURN c.id, c.name, dis.id AS source_event</div>
+                  <div class="ts-result">
+                    <span class="ts-tag tst-teal">Country(泰国) ← Doksuri, Saola</span>
+                    <span class="ts-tag tst-teal">Country(越南) ← Saola, Haikui</span>
+                  </div>
+                  <div class="ts-decision tsd-teal">
+                    <strong>LLM 决策：</strong>国家节点锁定并携带来源灾害 ID，继续并行发起 Hop 3a / 3b
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ts-row">
+              <div class="ts-spine"><div class="ts-dot dot-teal"></div><div class="ts-line line-green"></div></div>
+              <div class="ts-content">
+                <div class="ts-agent c-teal"><span class="path-badge pb-b">PATH B</span>Hop 3 · 并行跳转（3跳终止）</div>
+                <div class="ts-card">
+                  <div class="ts-label">Country → AnalysisReport &amp; Department（并行）</div>
+                  <div class="parallel-wrap">
+                    <div class="parallel-block pb-green-block">
+                      <div class="pb-block-label pbl-green">Hop 3a · -[:HAS_REPORT]→</div>
+                      <div class="ts-code" style="margin-top:0;font-size:9px;">MATCH (c:Country)
+  -[:HAS_REPORT]->(r:AnalysisReport)
+WHERE c.id IN ["TH","VN"]
+  AND r.source_event IN [
+    "Typhoon-Doksuri-2023",
+    "Typhoon-Saola-2023",
+    "Typhoon-Haikui-2023"]
+RETURN r.id, r.title</div>
+                      <div class="ts-result" style="margin-top:6px;">
+                        <span class="ts-tag tst-green">TH-Typhoon-2023-08</span>
+                        <span class="ts-tag tst-green">VN-Typhoon-2023-09</span>
+                      </div>
+                    </div>
+                    <div class="parallel-block pb-amber-block">
+                      <div class="pb-block-label pbl-amber">Hop 3b · -[:HAS_DEPT]→</div>
+                      <div class="ts-code" style="margin-top:0;font-size:9px;">MATCH (c:Country)
+  -[:HAS_DEPT]->(d:Department)
+WHERE c.id IN ["TH","VN"]
+  AND d.type = "应急救援"
+RETURN d.name, d.contact,
+       d.address, d.scope</div>
+                      <div class="ts-result" style="margin-top:6px;">
+                        <span class="ts-tag tst-amber">DDPM · +66-2-637-3000</span>
+                        <span class="ts-tag tst-amber">VNDMA · +84-24-3733-3415</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ts-decision tsd-green" style="margin-top:10px;">
+                    <strong>Path B vs Path A：</strong>多经由一跳（灾害节点），共 3 跳，但报告与具体台风事件的关联更精确。体现了 LLM 根据查询意图<strong>动态选择遍历起点</strong>的能力。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /path-b -->
+
+        </div><!-- /trace-graph -->
+
+        <!-- Vector -->
+        <div class="trace-step" id="trace-vector">
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-green"></div><div class="ts-line line-green"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-green">Agent 03 · Vector Retrieval</div>
+              <div class="ts-card">
+                <div class="ts-label">范围限定向量检索</div>
+                <div class="ts-detail">输入 Report IDs：<strong>TH-2023-08, TH-2023-10, VN-2023-09</strong><br>从原始问题提取语义查询：<strong>"台风受灾情况 损失 影响"</strong><br>仅在三份报告的 chunks 内执行向量检索，全量语料不参与计算。</div>
+                <div class="ts-result">
+                  <span class="ts-tag tst-green">TH-08 · chunk_14：洪涝覆盖面积 / 农业损失</span>
+                  <span class="ts-tag tst-green">TH-10 · chunk_07：人员伤亡统计</span>
+                  <span class="ts-tag tst-green">VN-09 · chunk_22：基础设施损毁情况</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-green"></div><div class="ts-line line-violet"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-green">Agent 03 · Chunk Summarization</div>
+              <div class="ts-card">
+                <div class="ts-label">就地摘要压缩（避免上下文爆炸）</div>
+                <div class="ts-detail">对每个召回 chunk 独立压缩，提取关键数据字段，丢弃冗余叙述性内容。</div>
+                <div class="ts-code">泰国(2023-08)：受灾省份 12 个，洪涝面积约 3,200 km²
+           农业损失估计 ¥42亿，撤离人口 18万
+泰国(2023-10)：死亡 23人，失踪 7人，房屋损毁 8,400户
+越南(2023-09)：道路中断 47处，桥梁损毁 12座
+           电力设施受损覆盖 320万户</div>
+                <div class="ts-decision tsd-green">
+                  原始 chunks 约 4,200 tokens → 压缩后约 280 tokens，传入 Response Agent 的上下文缩减 <strong>93%</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direct -->
+        <div class="trace-step" id="trace-direct">
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-amber"></div><div class="ts-line line-violet"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-amber">直接传递 · 结构化数据</div>
+              <div class="ts-card">
+                <div class="ts-label">部门信息直传（本例中与向量检索并行）</div>
+                <div class="ts-detail">图谱 Hop 2b 已返回完整结构化节点属性，无语义模糊，无需向量检索。</div>
+                <div class="ts-code">Department: DDPM (泰国灾害预防与减灾局)
+  contact : +66-2-637-3000
+  address : Bangkok, Rama II Rd.
+  scope   : 全国自然灾害应急响应
+
+Department: VNDMA (越南自然灾害管理局)
+  contact : +84-24-3733-3415
+  address : Hanoi, Doi Can St.
+  scope   : 全国洪涝、台风应急管理</div>
+                <div class="ts-decision tsd-amber">
+                  若查询仅涉及部门信息（不含受灾分析），则 Vector Retrieval Agent <strong>不会被触发</strong>，直接进入 Response Agent。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Response -->
+        <div class="trace-step" id="trace-response">
+          <div class="ts-row">
+            <div class="ts-spine"><div class="ts-dot dot-violet"></div></div>
+            <div class="ts-content">
+              <div class="ts-agent c-violet">Agent 04 · Response</div>
+              <div class="ts-card">
+                <div class="ts-label">上下文组装 → 最终生成</div>
+                <div class="ts-detail">汇入两路结果：<strong>向量摘要（灾情数据）</strong> + <strong>结构化节点（部门信息）</strong>，结合原始问题生成回答。</div>
+                <div class="ts-code">Context:
+  [灾情摘要] 泰国2023台风季：受灾12省，损失¥42亿...
+  [灾情摘要] 越南2023台风季：道路中断47处...
+  [部门信息] DDPM Thailand: +66-2-637-3000
+  [部门信息] VNDMA Vietnam: +84-24-3733-3415
+
+→ LLM 综合生成结构化答复，含数据来源溯源</div>
+                <div class="ts-result">
+                  <span class="ts-tag tst-violet">泰国受灾概况（2份报告综合）</span>
+                  <span class="ts-tag tst-violet">越南受灾概况</span>
+                  <span class="ts-tag tst-violet">泰国应急部门联系方式</span>
+                  <span class="ts-tag tst-violet">越南应急部门联系方式</span>
+                </div>
+                <div class="ts-decision tsd-violet">
+                  完整回答涵盖用户两个子需求，来源可溯源至具体报告节点和部门节点。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const progressMap = { query:8, guardrail:22, graph:52, vector:72, direct:72, response:100 };
+  const nodeIds = ['query','guardrail','graph','vector','direct','response'];
+
+  function showTrace(id) {
+    document.querySelectorAll('.trace-step').forEach(el => el.classList.remove('visible'));
+    const t = document.getElementById('trace-' + id);
+    if (t) t.classList.add('visible');
+    nodeIds.forEach(n => {
+      const el = document.getElementById('node-' + n);
+      if (el) el.classList.remove('active');
+    });
+    const a = document.getElementById('node-' + id);
+    if (a) a.classList.add('active');
+    document.getElementById('progress-bar').style.width = (progressMap[id] || 0) + '%';
+  }
+
+  function switchTab(paneId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(paneId).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
