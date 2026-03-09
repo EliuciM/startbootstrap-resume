@@ -1,0 +1,290 @@
+doctype html
+html(lang='zh-CN')
+    head
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+        meta(name='description', content='武超个人主页与简历')
+        meta(name='author', content='Wu Chao')
+        title 武超 - 个人主页
+
+        link(rel='icon', type='image/x-icon', href='assets/img/favicon.ico')
+        script(src='https://use.fontawesome.com/releases/v6.3.0/js/all.js', crossorigin='anonymous')
+        link(href='https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:500,700', rel='stylesheet')
+        link(href='https://fonts.googleapis.com/css?family=Muli:400,400i,800,800i', rel='stylesheet')
+        link(href='css/styles.css', rel='stylesheet')
+
+    body#page-top
+        nav#sideNav.navbar.navbar-expand-lg.navbar-dark.bg-primary.fixed-top
+            a.navbar-brand.js-scroll-trigger(href='#page-top')
+                span.d-block.d-lg-none Wu Chao
+                span.d-none.d-lg-block
+                    img.img-fluid.img-profile.rounded-circle.mx-auto.mb-2(src='assets/img/profile.jpg', alt='profile')
+            button.navbar-toggler(type='button', data-bs-toggle='collapse', data-bs-target='#navbarResponsive')
+                span.navbar-toggler-icon
+            #navbarResponsive.collapse.navbar-collapse
+                ul.navbar-nav
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#about') 关于
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#experience') 实习经历
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#research') 科研经历
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#projects') 项目经历
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#education') 教育背景
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#skills') 技能
+                    li.nav-item
+                        a.nav-link.js-scroll-trigger(href='#awards') 荣誉奖项
+                .language-switcher
+                    a.nav-link.lang-switch-link(href='index.html') EN
+
+        .container-fluid.p-0
+            section#about.resume-section
+                .resume-section-content
+                    h1.mb-0
+                        | 武
+                        span.text-primary  超
+                    .subheading.mb-5
+                        | +86 13405485195 ·
+                        a(href='mailto:wuchao20010522@gmail.com')  wuchao20010522@gmail.com
+                        |  ·
+                        a(href='http://www.wuchao.info')  www.wuchao.info
+                        |  ·
+                        a(href='https://www.linkedin.com/in/chase-wu')  LinkedIn
+                    p.lead.mb-5 武汉大学硕士研究生，聚焦多模态与大语言模型在专业场景中的研发与部署，研究方向涵盖地理空间问题、遥感应用与医学影像理解。
+                    p
+                        a(href='http://www.wuchao.info/data/CV_WUCHAO_202511.pdf', style='color: rgb(0, 81, 255); font-weight: bold') [Download PDF Version of CV]
+                    p
+                        a(href='http://www.wuchao.info/data/简历_武超_202601.pdf', style='color: rgb(0, 81, 255); font-weight: bold') [下载中文简历PDF版本]
+
+                    .social-icons
+                        a.social-icon(href='https://www.linkedin.com/in/chase-wu')
+                            i.fab.fa-linkedin-in
+                        a.social-icon(href='https://github.com/EliuciM')
+                            i.fab.fa-github
+                        a.social-icon(href='mailto:wuchao20010522@gmail.com')
+                            i.fa.fa-envelope
+
+            hr.m-0
+
+            section#experience.resume-section
+                .resume-section-content
+                    h2.mb-5 实习经历
+
+                    .d-flex.flex-column.flex-md-row.justify-content-between.mb-4
+                        div
+                            h3.mb-0 算法工程师实习生
+                            .subheading.mb-3 联合国卫星中心（UNOSAT）/ 联合国训练研究所（UNITAR），日内瓦
+                            p 1. 面向自然灾害场景重构 UNOSAT Web 地图平台，研发开源模板并在越南台风应急中完成实战验证；最终以容器化服务形式部署并被 UNOSAT 正式采用。
+                            p 2. 编写应急 Web 地图发布标准化手册，定义“项目准备—制图生产—在线发布”三阶段流程，打通 ArcGIS Pro、ArcGIS Online 与云端服务器协同链路。
+                            p 3. 对 Copernicus LAC 开源平台开展技术评估，系统分析其在拉美与加勒比地区灾害制图与监测中的能力边界，并从分布式与模块化架构角度提出优化方向。
+                            br
+                            a(href='http://www.wuchao.info/webmap-template-d42912f28179/', target='_blank')
+                                img.experience-img(src='http://www.wuchao.info/data/UNOSAT_WEBMAP_EXAMPLE1.png', alt='UNOSAT')
+                            br
+                            a(href='http://wuchao.info/TC20250718VNM-88bb84a488aa/', target='_blank')
+                                img.experience-img(src='http://www.wuchao.info/data/UNOSAT_WEBMAP_EXAMPLE2.png', alt='UNOSAT')
+                        div
+                            span.text-primary 2025.03 – 2025.09
+
+                    .d-flex.flex-column.flex-md-row.justify-content-between.mb-4
+                        div
+                            h3.mb-0 NLP 算法工程师实习生
+                            .subheading.mb-3 中国科学院自动化研究所 · 武汉人工智能研究院
+                            p 1. 将团队自研生成、分类、检索等神经网络模型由 NVIDIA 平台迁移至昇腾 GPU，完成跨框架精度对齐并优化整体性能。
+                            p 2. 在 Slurm 集群上处理近 15TB 大规模文本数据，构建高质量语料，为大语言模型预训练提供数据支撑。
+                            p 3. 在昇腾 910B 上部署多类 AI 模型，并将训练与推理流程容器化，支持交付上线与稳定运行。
+                        div
+                            span.text-primary 2023.08 – 2023.11
+
+                    .d-flex.flex-column.flex-md-row.justify-content-between.mb-4
+                        div
+                            h3.mb-0 NLP 算法工程师实习生
+                            .subheading.mb-3 百智诚远科技 · 人工智能研究院（武汉）
+                            p 1. 基于法考题库、法律条文与判例数据构建微调语料，完成开源语言模型在法律文本理解场景的领域适配。
+                            p 2. 使用 LangChain 与 Flask 开发法律知识问答 API，搭建检索增强生成（RAG）流水线，实现实时法律信息问答。
+                            p 3. 在华为昇腾 310 上部署开源生成模型与向量模型，优化推理性能并保障线上服务稳定性。
+                            .experience-subframe#rag-preview-trigger(role='button', tabindex='0', aria-label='打开多智能体 RAG 流程图')
+                                .experience-subframe-header
+                                    span 多智能体 RAG 流程演示
+                                    span.experience-subframe-tip 点击放大并交互
+                                .experience-subframe-preview#rag-preview-viewport
+                                    iframe#rag-preview-frame(src='assets/rag-architecture-v4.html', title='RAG 架构预览', loading='lazy', scrolling='no')
+                        div
+                            span.text-primary 2023.04 – 2023.06
+
+                    .d-flex.flex-column.flex-md-row.justify-content-between
+                        div
+                            h3.mb-0 NLP 算法工程师实习生
+                            .subheading.mb-3 OPPO 研究院 · 融智实验室
+                            p 1. 通过神经网络 INT8 量化将端侧推理速度提升约 30%；基于 PyTorch 与 torch.fx 完成算子融合/替换与计算图优化，并结合 PTQ、QAT 策略权衡时延与精度。
+                            p 2. 在 MNN 上部署轻量化 CLIP 图文检索模型，支持端侧多模态搜索；将量化模型接入移动端推理流程，并参与 PPQ 工具链端到端量化部署测试。
+                            br
+                            img.experience-img(src='http://www.wuchao.info/data/OPPO_Normalization_Optimization1.png', alt='OPPO')
+                            br
+                            img.experience-img(src='http://www.wuchao.info/data/OPPO_Normalization_Optimization2.png', alt='OPPO')
+                        div
+                            span.text-primary 2022.11 – 2023.01
+
+            hr.m-0
+
+            section#research.resume-section
+                .resume-section-content
+                    h2.mb-5 科研经历
+
+                    p
+                        strong
+                            a(href='http://fetusllava.cpolar.cn') 基于多中心多模态孕检数据的胎儿先天畸形智能诊断
+                        br
+                        em 国家重点研发计划（“十四五”）· 2024.03 – 2025.03
+                        br
+                        | 1. 基于 LLaVA 架构训练胎儿先心病超声诊断多模态大模型，优化多图像/多视频数据流水线以降低视觉 Token 复杂度，并引入强化学习提升细粒度诊断能力。
+                        br
+                        | 2. 基于 Gradio 构建先天性心脏病智能诊断系统，完成模型推理与可视化一体化落地；成果作为年度重点进展写入项目汇报（
+                        a(href='https://cs.whu.edu.cn/info/1054/50461.htm', target='_blank') 官方新闻
+                        | ).
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Fetus_LLaVA3.png', alt='Fetus_LLaVA')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Fetus_LLaVA2.png', alt='Fetus_LLaVA')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Fetus_LLaVA1.png', alt='Fetus_LLaVA')
+
+                    p
+                        strong
+                            a(href='http://www.wuchao.info/data/Agent_MMKG_Bridges3.pdf') 大模型驱动的桥梁多模态知识图谱构建（IGARSS 2025 Oral）
+                        br
+                        em 硕士研究课题 · 2023.09 – 2025.03
+                        br
+                        | 1. 基于 GPT-4o 构建桥梁领域问答数据集，训练多模态桥梁知识图谱智能体；通过指令微调 LLaMA、Qwen、GLM 等开源模型，实现任务分解与工具调用，完成矢量、栅格与文本模态协同构图。
+                        br
+                        | 2. 基于开源数据训练 SAM 遥感桥梁分割模型，实现无提示词桥梁自动提取，提升大规模多模态知识图谱构建效率。
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Agent_MMKG_Bridges1.png', alt='Agent_MMKG_Bridges')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Agent_MMKG_Bridges3.png', alt='Agent_MMKG_Bridges')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Agent_MMKG_Bridges2.png', alt='Agent_MMKG_Bridges')
+
+                    p
+                        strong 基于多模态数据挖掘的桥梁知识图谱构建
+                        br
+                        em 本科毕业设计 · 2022.12 – 2023.06
+                        br
+                        | 1. 使用 5% 人工标注数据微调百度 UIE 模型开展桥梁文本信息抽取，验证集 F1、Recall、Precision 均超过 0.85，从 2119 篇百科词条中抽取桥梁相关实体 2.3 万条。
+                        br
+                        | 2. 基于 DOTA 数据集微调 ViTAE 进行遥感桥梁检测，验证集 mAP50 达 0.775、桥梁类别 AP50 达 0.557，在 873 幅遥感图像中检测出 1800 个桥梁目标框。
+                        br
+                        | 3. 通过空间叠加与缓冲区分析完成多模态知识融合，实现文本数据、遥感影像与 OSM 矢量数据跨模态关联。
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/MMKG_Bridge1.png', alt='MMKG_Bridge')
+                        img.experience-img(src='http://www.wuchao.info/data/MMKG_Bridge2.png', alt='MMKG_Bridge')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/MMKG_Bridge3.png', alt='MMKG_Bridge')
+                        img.experience-img(src='http://www.wuchao.info/data/MMKG_Bridge4.png', alt='MMKG_Bridge')
+
+            hr.m-0
+
+            section#projects.resume-section
+                .resume-section-content
+                    h2.mb-5 项目经历
+
+                    p
+                        strong 乡村文旅景点智能评估与 AR 展示
+                        br
+                        | 1. 基于中文 BERT 构建景点评价情感分析模型，通过迁移学习、自定义网络结构与超参数调优降低微调过拟合，情感分类准确率较 BERT-Base 基线提升 5%。
+                        br
+                        | 2. 使用 Biterm Topic Model（BTM）对短评语料进行主题分析，通过聚类识别乡村旅游体验关键问题，形成景区优化建议。
+                        br
+                        | 3. 基于 Java Servlet 开发 AR 文旅服务后端，完成 HTTP 请求处理与业务逻辑分层，支持景区 AR 内容实时交互展示。
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Sentiment_Bert1.png', alt='Sentiment_Bert')
+                        br
+                        img.experience-img(src='http://www.wuchao.info/data/Sentiment_Bert2.png', alt='Sentiment_Bert')
+
+                    p
+                        strong
+                            a(href='http://www.wuchao.info/webgis') Web GIS 信息服务平台
+                        br
+                        | 1. 基于三层 B/S 架构独立完成全栈 Web GIS 平台设计与开发，实现空间数据查询、编辑与存储等交互式地理信息服务能力。
+                        br
+                        | 2. 结合 PostgreSQL 与 pgRouting 构建约束路径规划服务，优化路由算法以支持多条件导航与高效空间计算。
+                        br
+                        | 3. 基于 CesiumJS 开发桃花源景区三维可视化示例，融合地形、建筑与路线数据，实现沉浸式虚拟地理浏览。
+
+                    p
+                        strong
+                            a(href='http://www.wuchao.info/data/SoftwareCup_SylixOS.mp4') 第十一届“中国软件杯”大学生软件设计大赛
+                        br
+                        | 1. 基于国产 SylixOS 操作系统开发轻量级机场人脸识别系统，负责总体方案设计、技术路线制定与任务拆解。
+                        br
+                        | 2. 在 PyTorch 框架下训练人脸检测、关键点检测与特征向量化模型，并完成模型框架转换。
+                        br
+                        | 3. 基于 NCNN 完成模型推理与 SylixOS 端软件集成，官方评测识别准确率超过 90%。
+
+            hr.m-0
+
+            section#education.resume-section
+                .resume-section-content
+                    h2.mb-5 教育背景
+
+                    .d-flex.justify-content-between
+                        div
+                            h3.mb-0 武汉大学
+                            .subheading 测绘工程（地图制图与地理信息工程）硕士
+                            div 测绘遥感信息工程国家重点实验室
+                        div
+                            span.text-primary 2023.09 – 2026.06
+
+                    .d-flex.justify-content-between.mt-4
+                        div
+                            h3.mb-0 武汉大学
+                            .subheading 地理信息科学 学士
+                            div 资源与环境科学学院 · GPA：90.5/100 · 专业前 25%
+                        div
+                            span.text-primary 2019.09 – 2023.06
+
+            hr.m-0
+
+            section#skills.resume-section
+                .resume-section-content
+                    h2.mb-5 技能
+
+                    .subheading 技术栈
+                    ul
+                        li Python, Java, C++
+                        li TensorFlow, PyTorch, DeepSpeed
+                        li Linux, Docker, Slurm, Git
+                        li PostgreSQL
+
+                    .subheading.mt-3 语言能力
+                    ul
+                        li 中文（母语）
+                        li 英语（流利）
+
+            hr.m-0
+
+            section#awards.resume-section
+                .resume-section-content
+                    h2.mb-5 荣誉与成果
+                    ul
+                        li 国家奖学金（2020.12）
+                        li 武汉大学优秀学生奖学金（2020.12）
+                        li 中国软件杯全国二等奖（全国前 3 队）
+                        li 发明专利申请：基于多模态大模型的胎儿结构畸形测量诊断方法（2025）
+                        li 软件著作权：胎儿超声影像多模态智能诊断系统（2025）
+                        li 软件著作权：基于 SylixOS 的轻量化机场人脸识别系统（2023）
+                        li 软件著作权：文旅景区增强现实可视化软件（2022）
+
+        #rag-modal.rag-modal(aria-hidden='true')
+            .rag-modal-backdrop#rag-modal-backdrop
+            .rag-modal-dialog(role='dialog', aria-modal='true', aria-label='多智能体 RAG 流程交互视图')
+                .rag-modal-header
+                    h3.rag-modal-title 多智能体 RAG 流程 · 交互视图
+                    button.rag-modal-close#rag-modal-close(type='button') 关闭
+                iframe(src='assets/rag-architecture-v4.html', title='RAG 架构交互图')
+
+        script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js')
+        script(src='js/scripts.js')

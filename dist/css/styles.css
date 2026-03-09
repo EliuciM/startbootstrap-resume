@@ -10879,6 +10879,19 @@ p.lead {
 #sideNav .navbar-toggler:focus {
   outline-color: #d48a6e;
 }
+#sideNav .language-switcher {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+#sideNav .language-switcher .lang-switch-link {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+}
 
 @media (min-width: 992px) {
   #sideNav {
@@ -10919,6 +10932,17 @@ p.lead {
   }
   #sideNav .navbar-collapse .navbar-nav .nav-item .nav-link {
     display: block;
+  }
+  #sideNav .navbar-collapse .language-switcher {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1.5rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+  #sideNav .navbar-collapse .language-switcher .lang-switch-link {
+    display: inline-block;
   }
 }
 .social-icons .social-icon {
