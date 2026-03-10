@@ -94,6 +94,12 @@ html(lang='en')
                             br
                             a(href='http://wuchao.info/TC20250718VNM-88bb84a488aa/', target='_blank')
                                 img.experience-img(src='http://www.wuchao.info/data/UNOSAT_WEBMAP_EXAMPLE2.png', alt='UNOSAT')
+                            .experience-subframe#rag-preview-trigger(role='button', tabindex='0', aria-label='Open Multi-Agent RAG Pipeline')
+                                .experience-subframe-header
+                                    span Multi-Agent RAG Pipeline Demo
+                                    span.experience-subframe-tip Click to view
+                                .experience-subframe-preview#rag-preview-viewport
+                                    iframe#rag-preview-frame(src='assets/rag-architecture-v4.html', title='RAG Architecture Preview', loading='lazy', scrolling='no')
                         div
                             span.text-primary Mar 2025 – Sep 2025
 
@@ -114,12 +120,6 @@ html(lang='en')
                             p 1. Legal-domain LLM training: built fine-tuning datasets from legal exams, statutes, and case judgments, and fine-tuned open-source models for legal-domain adaptation.
                             p 2. Legal knowledge QA service: implemented a LangChain + Flask RAG service and exposed API endpoints for statute-oriented question answering.
                             p 3. Model deployment: participated in deployment of open-source generative and embedding models on Huawei Ascend 310-series accelerators.
-                            .experience-subframe#rag-preview-trigger(role='button', tabindex='0', aria-label='Open Multi-Agent RAG Pipeline')
-                                .experience-subframe-header
-                                    span Multi-Agent RAG Pipeline Demo
-                                    span.experience-subframe-tip 点击放大并交互
-                                .experience-subframe-preview#rag-preview-viewport
-                                    iframe#rag-preview-frame(src='assets/rag-architecture-v4.html', title='RAG Architecture Preview', loading='lazy', scrolling='no')
                         div
                             span.text-primary Apr 2023 – Jun 2023
 
